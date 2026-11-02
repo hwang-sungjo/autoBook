@@ -5,3 +5,5 @@ artifacts/
 .vercel/
 .env
 .env.*
+.vercel
+.env*

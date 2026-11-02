@@ -6,7 +6,7 @@
   "outputDirectory": "dist",
   "regions": ["icn1"],
   "functions": {
-    "api/site-clock.mjs": {
+    "api/site-clock.js": {
       "maxDuration": 10
     }
   },

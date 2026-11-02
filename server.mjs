@@ -2,7 +2,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import siteClockHandler from './api/site-clock.mjs';
+import siteClockHandler from './api/site-clock.js';
 
 const root = path.resolve(fileURLToPath(new URL('./dist/', import.meta.url)));
 const port = Number(process.env.PORT || 4173);

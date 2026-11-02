@@ -5,7 +5,7 @@
 ## Vercel 배포
 
 - GitHub 저장소를 Vercel에서 Import합니다. 프레임워크는 `Other`, 루트 디렉터리는 저장소 루트를 사용합니다.
-- `vercel.json`이 정적 페이지 디렉터리 `dist`, Node.js 시간 조회 함수 `api/site-clock.mjs`, 서울 리전 `icn1`을 설정합니다. 별도 설치·빌드 명령이나 환경변수는 필요하지 않습니다.
+- `vercel.json`이 정적 페이지 디렉터리 `dist`, Node.js 시간 조회 함수 `api/site-clock.js`, 서울 리전 `icn1`을 설정합니다. 별도 설치·빌드 명령이나 환경변수는 필요하지 않습니다.
 - 새 브라우저의 기본 선행 보정은 사용자 요청대로 **62ms**입니다. 이미 저장된 사용자 설정은 유지합니다. 로컬 주소와 배포 주소의 저장 공간은 별개이므로 기존 일정·후보는 JSON 내보내기/가져오기로 옮길 수 있습니다.
 - Vercel에서는 사용자의 컴퓨터에서 로컬 서버를 실행할 필요가 없습니다. 자동 열기는 브라우저에서 수행하므로 대기 탭과 컴퓨터는 계속 켜 두어야 합니다.
 - 시간 측정 경로는 **Vercel 서버 → 공개 사이트 루트**입니다. 사용자 브라우저의 예매·대기열 접수 지연으로 해석하지 않습니다.
@@ -94,7 +94,7 @@ npm run dev
 - `dist/timing.mjs`: 사이트 시계 보정, 자동 열기 상태와 한 번만 실행하는 처리
 - `dist/standby.html`, `standby.mjs`: 지정 시각에 공식 페이지로 이동하는 대기 탭
 - `server.mjs`, `server-clock.mjs`, `connection-probe.mjs`: 정적 파일, 사이트 시간, 연결 구간 측정을 제공하는 로컬 서버
-- `api/site-clock.mjs`, `vercel.json`: 로컬과 Vercel에서 함께 사용하는 시간 API 및 배포 설정
+- `api/site-clock.js`, `vercel.json`: 로컬과 Vercel에서 함께 사용하는 시간 API 및 배포 설정
 - `tests/`: 날짜·URL·알림·가져오기·좌석 점수·사이트 시각·자동 열기 및 HTTP 서버 테스트
 
 ```sh
