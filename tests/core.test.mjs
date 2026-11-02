@@ -156,11 +156,11 @@ test('새 기본 상태와 우선순위 배열은 서로 독립적이다', () =>
   assert.deepEqual(normalizePriorities(['aisle', 'aisle', null]), ['aisle', 'infield', 'firstBase', 'field', 'cheering']);
 });
 
-test('요청한 동접 10만 명과 왕복 58ms 가정은 선행 보정 29ms로 저장된다', () => {
-  assert.deepEqual(defaultTimingProfile(), { enabled: true, assumedConcurrentUsers: 100000, assumedRttMs: 58 });
-  assert.equal(timingAdvanceMs(defaultTimingProfile()), 29);
+test('배포 기본값은 동접 12만 명과 왕복 116ms, 실행 여유 4ms의 선행 보정 62ms다', () => {
+  assert.deepEqual(defaultTimingProfile(), { enabled: true, assumedConcurrentUsers: 120000, assumedRttMs: 116, dispatchMarginMs: 4 });
+  assert.equal(timingAdvanceMs(defaultTimingProfile()), 62);
   const migrated = hydrateState({ version: 1, event });
-  assert.equal(timingAdvanceMs(migrated.timingProfile), 29);
+  assert.equal(timingAdvanceMs(migrated.timingProfile), 62);
   const stored = hydrateState({ version: 1, event, timingProfile: { enabled: true, assumedConcurrentUsers: 120000, assumedRttMs: 100 } });
   assert.equal(stored.timingProfile.assumedConcurrentUsers, 120000);
   assert.equal(timingAdvanceMs(stored.timingProfile), 50);

@@ -8,7 +8,7 @@ export const CHECKLIST = [
 ];
 
 export function defaultTimingProfile() {
-  return { enabled: true, assumedConcurrentUsers: 100_000, assumedRttMs: 58 };
+  return { enabled: true, assumedConcurrentUsers: 120_000, assumedRttMs: 116, dispatchMarginMs: 4 };
 }
 
 export function normalizeTimingProfile(raw) {
@@ -18,16 +18,20 @@ export function normalizeTimingProfile(raw) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
   };
-  return {
+  const normalized = {
     enabled: raw?.enabled === true,
     assumedConcurrentUsers: Math.min(10_000_000, Math.max(100_000, Math.round(number(raw?.assumedConcurrentUsers, 100_000)))),
     assumedRttMs: Math.min(2000, Math.max(0, Math.round(number(raw?.assumedRttMs, 58)))),
   };
+  const dispatchMarginMs = Math.min(100, Math.max(0, Math.round(number(raw?.dispatchMarginMs, 0))));
+  // Keep the existing stored shape when no additional margin is configured.
+  if (dispatchMarginMs > 0) normalized.dispatchMarginMs = dispatchMarginMs;
+  return normalized;
 }
 
 export function timingAdvanceMs(profile) {
   const normalized = normalizeTimingProfile(profile);
-  return normalized.enabled ? Math.round(normalized.assumedRttMs / 2) : 0;
+  return normalized.enabled ? Math.min(1000, Math.round(normalized.assumedRttMs / 2) + (normalized.dispatchMarginMs || 0)) : 0;
 }
 
 export function defaultState() {

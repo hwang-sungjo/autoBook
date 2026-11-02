@@ -119,7 +119,7 @@ export class SiteClock {
       try {
         const start = this.monoNow();
         const response = await this.fetchImpl(`/api/site-clock?origin=${encodeURIComponent(origin)}`, { cache: 'no-store', signal: AbortSignal.timeout(10_000) });
-        if (!response.ok) throw new Error('사이트 시간 확인에 실패했어요. 로컬 서버 실행 상태와 인터넷 연결을 확인해 주세요.');
+        if (!response.ok) throw new Error('사이트 시간 확인에 실패했어요. 인터넷 연결과 사이트 상태를 확인해 주세요.');
         const packet = await response.json();
         const end = this.monoNow();
         const anchor = clockAnchor(packet, end - start, origin);
@@ -152,6 +152,7 @@ export function normalizeLaunch(raw) {
     advanceMs: launchAdvanceMs(raw),
     assumedConcurrentUsers: Number.isFinite(raw.assumedConcurrentUsers) && raw.assumedConcurrentUsers >= 100_000 && raw.assumedConcurrentUsers <= 10_000_000 ? Math.round(raw.assumedConcurrentUsers) : null,
     assumedRttMs: Number.isFinite(raw.assumedRttMs) && raw.assumedRttMs >= 0 && raw.assumedRttMs <= 2000 ? raw.assumedRttMs : null,
+    ...(Number.isFinite(raw.dispatchMarginMs) && raw.dispatchMarginMs > 0 && raw.dispatchMarginMs <= 100 ? { dispatchMarginMs: Math.round(raw.dispatchMarginMs) } : {}),
     reason: typeof raw.reason === 'string' ? raw.reason.slice(0, 200) : '',
     finishedAtMs: Number.isFinite(raw.finishedAtMs) ? raw.finishedAtMs : null,
     latenessMs: Number.isFinite(raw.latenessMs) ? raw.latenessMs : null,

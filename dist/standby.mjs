@@ -57,7 +57,7 @@ function render() {
   $('#standby-count').textContent = snapshot.fresh ? `${count.days > 0 ? `${count.days}일 ` : ''}${[count.hours, count.minutes, count.seconds].map((number) => String(number).padStart(2, '0')).join(' : ')}` : '-- : -- : --';
   $('#standby-count').setAttribute('aria-label', snapshot.fresh ? `페이지 열기까지 ${count.totalSeconds}초` : '사이트 시간 확인 중');
   $('#standby-clock-source').textContent = snapshot.fresh ? '사이트 응답 시각 기준 · 추정' : snapshot.syncing ? '사이트 시간 확인 중…' : '사이트 시간 재확인이 필요해요.';
-  $('#standby-clock-detail').textContent = snapshot.fresh ? `측정 ${Math.floor(snapshot.ageMs / 1000)}초 전 · 시간 해상도 ${snapshot.resolutionMs / 1000}초${snapshot.ageSeconds > 0 ? ` · 캐시 ${snapshot.ageSeconds}초 반영` : ''}` : snapshot.error || '인터넷 연결과 로컬 서버를 확인해 주세요.';
+  $('#standby-clock-detail').textContent = snapshot.fresh ? `측정 ${Math.floor(snapshot.ageMs / 1000)}초 전 · 시간 해상도 ${snapshot.resolutionMs / 1000}초${snapshot.ageSeconds > 0 ? ` · 캐시 ${snapshot.ageSeconds}초 반영` : ''}` : snapshot.error || '인터넷 연결과 사이트 상태를 확인해 주세요.';
   connectionStatus.textContent = snapshot.fresh ? `앱 서버 왕복 ${Math.round(snapshot.upstreamRttMs)}ms · 계산상 불확실성 ±${Math.ceil(snapshot.uncertaintyMs)}ms · ${snapshot.sampleCount}개 표본 중 선택${warmupRequested ? ' · 연결 준비 힌트 요청됨' : ' · 오픈 30초 전에 연결 준비'}` : '';
   $('#standby-status').textContent = snapshot.fresh ? advance > 0 ? `가정 기반 보정 적용 · 공식 오픈 ${advance}ms 전에 이동을 시도해요.` : '준비됐어요. 오픈 시각에 이 탭이 이동해요.' : '시간 정보를 확인할 때까지 이동하지 않아요.';
 }

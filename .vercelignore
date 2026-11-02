@@ -1,0 +1,9 @@
+*
+!dist/
+!dist/**
+!api/
+!api/site-clock.mjs
+!server-clock.mjs
+!connection-probe.mjs
+!package.json
+!vercel.json

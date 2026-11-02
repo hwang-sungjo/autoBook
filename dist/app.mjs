@@ -126,6 +126,7 @@ for (const [id, label] of [['rtt', '앱 서버 왕복'], ['offset', '기기 시�
   group.append(element('dt', '', label), value); timingMetrics.append(group);
 }
 const connectionMetrics = element('p', 'connection-metrics'); connectionMetrics.id = 'connection-metrics';
+const launchMetrics = element('p', 'connection-metrics'); launchMetrics.id = 'last-launch-metrics';
 const calibrationNote = element('p', 'timing-note calibration-note');
 const profileForm = element('form', 'timing-profile'); profileForm.id = 'timing-profile-form';
 const profileHeading = element('div', 'profile-heading');
@@ -135,7 +136,7 @@ const profileEnabled = element('input'); profileEnabled.type = 'checkbox'; profi
 profileEnabledLabel.append(profileEnabled, document.createTextNode('선행 보정 적용'));
 profileHeading.append(profileEnabledLabel);
 const profileFields = element('div', 'profile-fields');
-for (const [name, label, min, max, step] of [['assumedConcurrentUsers', '동시 접속 가정 (명)', 100000, 10000000, 1], ['assumedRttMs', '가정 왕복 지연 (ms)', 0, 2000, 1]]) {
+for (const [name, label, min, max, step] of [['assumedConcurrentUsers', '동시 접속 가정 (명)', 100000, 10000000, 1], ['assumedRttMs', '가정 왕복 지연 (ms)', 0, 2000, 1], ['dispatchMarginMs', '실행 지연 여유 (ms)', 0, 100, 1]]) {
   const field = element('label', '', label);
   const input = element('input'); input.type = 'number'; input.name = name; input.min = String(min); input.max = String(max); input.step = String(step); input.required = true;
   field.append(input); profileFields.append(field);
@@ -143,20 +144,20 @@ for (const [name, label, min, max, step] of [['assumedConcurrentUsers', '동시 
 const profileOutput = element('output', 'profile-output'); profileOutput.id = 'profile-output';
 const profileSave = element('button', 'button button-white', '보정값 저장'); profileSave.type = 'submit';
 profileFields.append(profileOutput, profileSave);
-profileForm.append(profileHeading, profileFields, element('p', 'profile-explanation', '왕복 지연의 절반을 편도 지연으로 가정해 정수 ms로 반올림해요. 접속자 수나 대기 순번만으로 필요한 선행 시간을 계산할 수 없어요. 큰 값을 넣어도 순번 개선이 보장되지 않으며 오픈 전에 도착할 수 있어요.'));
+profileForm.append(profileHeading, profileFields, element('p', 'profile-explanation', '왕복 지연의 절반에 실행 지연 여유를 더해 최대 1,000ms 먼저 이동해요. 실행 지연은 매번 달라질 수 있어요. 접속자 수나 대기 순번만으로 필요한 선행 시간을 계산할 수 없으며 오픈 전에 도착할 수 있어요.'));
 profileForm.addEventListener('input', previewTimingProfile);
 profileForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const profile = formTimingProfile();
   if (JSON.stringify(profile) !== JSON.stringify(state.timingProfile)) await cancelAutomatic('보정값을 바꿔 기존 자동 열기를 취소했어요. 새 값으로 다시 예약해 주세요.');
   state.timingProfile = profile; save(); renderTimingProfile(); renderTiming();
-  toast('가정 기반 보정값을 저장했어요', `${profile.assumedConcurrentUsers.toLocaleString('ko-KR')}명 접속 · 왕복 ${profile.assumedRttMs}ms 가정 · ${timingAdvanceMs(profile)}ms 미리 열기. 다음 자동 열기 예약에 적용돼요.`);
+  toast('가정 기반 보정값을 저장했어요', `${profile.assumedConcurrentUsers.toLocaleString('ko-KR')}명 접속 · 왕복 ${profile.assumedRttMs}ms 가정 + 실행 여유 ${profile.dispatchMarginMs || 0}ms · ${timingAdvanceMs(profile)}ms 미리 열기. 다음 자동 열기 예약에 적용돼요.`);
 });
-timingTools.append(timingHeader, clockDetail, launchRow, timingMetrics, connectionMetrics, profileForm, calibrationNote, queueGuide, timingNote);
+timingTools.append(timingHeader, clockDetail, launchRow, timingMetrics, connectionMetrics, launchMetrics, profileForm, calibrationNote, queueGuide, timingNote);
 $('.dashboard-grid').after(timingTools);
 
 function formTimingProfile() {
-  return normalizeTimingProfile({ enabled: profileEnabled.checked, assumedConcurrentUsers: profileForm.elements.assumedConcurrentUsers.value, assumedRttMs: profileForm.elements.assumedRttMs.value });
+  return normalizeTimingProfile({ enabled: profileEnabled.checked, assumedConcurrentUsers: profileForm.elements.assumedConcurrentUsers.value, assumedRttMs: profileForm.elements.assumedRttMs.value, dispatchMarginMs: profileForm.elements.dispatchMarginMs.value });
 }
 function previewTimingProfile() {
   const profile = formTimingProfile();
@@ -167,6 +168,7 @@ function renderTimingProfile() {
   profileEnabled.checked = profile.enabled;
   profileForm.elements.assumedConcurrentUsers.value = profile.assumedConcurrentUsers;
   profileForm.elements.assumedRttMs.value = profile.assumedRttMs;
+  profileForm.elements.dispatchMarginMs.value = profile.dispatchMarginMs || 0;
   previewTimingProfile();
 }
 
@@ -188,9 +190,16 @@ function renderTiming() {
   connectionMetrics.textContent = connection?.scope === 'local-server-to-site'
     ? `앱 서버 → 사이트 (HTTP/1.1): DNS ${formatMs(connection.dnsMs)} · TCP ${formatMs(connection.tcpMs)} · TLS ${formatMs(connection.tlsMs)} · 요청 후 응답 헤더 ${formatMs(connection.requestToHeadersMs)}${connection.reusedSocket ? ' · 연결 재사용' : ''}. Chrome의 실제 연결·도착 시간은 별도로 측정되지 않아요.`
     : '앱 서버의 연결 구간을 측정하고 있어요. Chrome의 실제 연결·도착 시간은 이 앱에서 측정할 수 없어요.';
+  const signedMs = (value) => Number.isFinite(value) ? `${value >= 0 ? '+' : ''}${formatMs(value)}` : '기록 없음';
+  const launchTime = Number.isFinite(launch?.finishedAtMs) && Math.abs(launch.finishedAtMs) <= 8.64e15 ? new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3, hourCycle: 'h23',
+  }).format(launch.finishedAtMs) : '기록 없음';
+  launchMetrics.textContent = launch?.status === 'opened'
+    ? `직전 실행 당시 기록: 이동 명령 ${launchTime} KST (추정 사이트 시각) · 설정 선행 ${launchAdvanceMs(launch)}ms · 목표 대비 ${signedMs(launch.latenessMs)} · 공식 오픈 대비 ${signedMs(launch.openingOffsetMs)} · 앱 서버 왕복 ${formatMs(launch.networkRttMs)} · 시계 불확실성 ±${formatMs(launch.clockUncertaintyMs)}. 당시 홈페이지 측정이며 대기열 접수 지연이나 최대 트래픽 지연은 아니에요.`
+    : '자동 열기 실행 후 당시의 이동 명령 시각과 측정값이 여기에 표시돼요.';
   const armed = launch?.status === 'armed';
   const advance = timingAdvanceMs(state.timingProfile);
-  calibrationNote.textContent = `저장된 가정: ${state.timingProfile.assumedConcurrentUsers.toLocaleString('ko-KR')}명 이상 · 왕복 ${state.timingProfile.assumedRttMs}ms · 선행 보정 ${advance}ms. 다음 예약에 고정 적용돼요. 대기 탭은 자동 열기 30초 전에 연결 준비 힌트를 요청해요.`;
+  calibrationNote.textContent = `저장된 가정: ${state.timingProfile.assumedConcurrentUsers.toLocaleString('ko-KR')}명 이상 · 왕복 ${state.timingProfile.assumedRttMs}ms · 실행 여유 ${state.timingProfile.dispatchMarginMs || 0}ms · 선행 보정 ${advance}ms. 다음 예약에 고정 적용돼요. 대기 탭은 자동 열기 30초 전에 연결 준비 힌트를 요청해요.`;
   launchButton.textContent = armed ? '자동 열기 취소' : advance > 0 ? `오픈 ${advance}ms 전에 자동 열기` : '오픈 시각에 자동 열기';
   launchButton.append(icon(armed ? 'close' : 'arrow'));
   launchButton.disabled = !armed && (!state.event || !snapshot.fresh || !navigator.locks);
@@ -226,6 +235,7 @@ launchButton.addEventListener('click', () => {
     version: 1, id: crypto.randomUUID(), name: state.event.name, url: state.event.url, opensAt: state.event.opensAt, status: 'armed', heartbeatAtMs: Date.now(),
     timingMode: advanceMs > 0 ? 'assumed' : 'none', advanceMs,
     assumedConcurrentUsers: state.timingProfile.assumedConcurrentUsers, assumedRttMs: state.timingProfile.assumedRttMs,
+    dispatchMarginMs: state.timingProfile.dispatchMarginMs || 0,
   };
   if (launchTargetMs(record) <= siteClock.now()) { toast('보정된 자동 열기 시각이 지난 일정이에요', '다가오는 오픈 시각으로 일정을 수정해 주세요.'); return; }
   try { launchStorage.setItem(LAUNCH_KEY, JSON.stringify(record)); }

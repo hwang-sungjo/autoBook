@@ -2,13 +2,12 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { createClockService, clockOrigin } from './server-clock.mjs';
+import siteClockHandler from './api/site-clock.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('./dist/', import.meta.url)));
 const port = Number(process.env.PORT || 4173);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT must be between 1 and 65535.');
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json; charset=utf-8' };
-const siteClock = createClockService();
 
 const server = http.createServer(async (req, res) => {
   if (!['GET', 'HEAD'].includes(req.method)) {
@@ -19,18 +18,7 @@ const server = http.createServer(async (req, res) => {
     const requestUrl = new URL(req.url, 'http://localhost');
     const pathname = decodeURIComponent(requestUrl.pathname);
     if (pathname === '/api/site-clock') {
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      res.setHeader('Cache-Control', 'no-store');
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      if (req.headers['sec-fetch-site'] === 'cross-site') { res.writeHead(403).end(JSON.stringify({ error: '다른 사이트에서 요청할 수 없어요.' })); return; }
-      const origin = clockOrigin(requestUrl.searchParams.get('origin') ?? undefined);
-      if (!origin) { res.writeHead(400).end(JSON.stringify({ error: '지원하지 않는 사이트예요.' })); return; }
-      try {
-        const packet = await siteClock.get(origin);
-        res.writeHead(200).end(req.method === 'HEAD' ? undefined : JSON.stringify(packet));
-      } catch {
-        res.writeHead(503, { 'Retry-After': '60' }).end(req.method === 'HEAD' ? undefined : JSON.stringify({ error: '사이트 시간 정보를 확인하지 못했어요. 1분 후 다시 시도해 주세요.' }));
-      }
+      await siteClockHandler(req, res);
       return;
     }
     const filename = path.resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
