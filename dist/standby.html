@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>ONDECK — 예매 페이지 대기</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./standby.mjs"></script>
+</head>
+<body class="standby-body">
+  <main class="standby-shell">
+    <a class="standby-brand" href="./" target="_blank" rel="noopener"><img src="./icon.svg" alt="" width="33" height="33">ONDECK.</a>
+    <section class="standby-card" aria-labelledby="standby-name">
+      <span class="eyebrow">READY TO OPEN</span>
+      <h1 id="standby-name">예약 정보를 확인하고 있어요</h1>
+      <p id="standby-date"></p>
+      <div id="standby-count" class="standby-count" aria-label="페이지 열기까지 남은 시간">-- : -- : --</div>
+      <p id="standby-status" class="standby-status" role="status">사이트 시간 확인 중…</p>
+      <div class="standby-clock"><strong id="standby-clock-source">사이트 응답 시각을 확인하고 있어요.</strong><span id="standby-clock-detail"></span></div>
+      <p class="standby-description">이 탭을 열어 두면 지정 시각에 공식 예매 페이지로 한 번 이동해요. 탭을 앞에 두고 기기의 절전 상태를 해제해 주세요. 이 탭을 닫거나 새로고침하면 예약이 취소돼요.</p>
+      <p class="standby-description">사이트가 제공하는 HTTP Date와 Age를 이용한 추정 시각이에요. 초 단위 정보와 네트워크·브라우저 지연으로 실제 예매 서버 및 페이지 도착 시각과 차이가 날 수 있어요.</p>
+      <div class="standby-actions"><button id="standby-cancel" class="button button-white">자동 열기 취소</button><a id="standby-manual" class="button button-dark" hidden>지금 직접 열기</a></div>
+    </section>
+    <p class="standby-footer">이 페이지는 예매 페이지를 여는 기능만 수행해요. 이후 예매는 공식 페이지에서 직접 진행해 주세요.</p>
+  </main>
+</body>
+</html>

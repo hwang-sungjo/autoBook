@@ -1,0 +1,13 @@
+{
+  "name": "ondeck-booking-companion",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "로컬에서 사용하는 야구 예매 준비 도구",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
